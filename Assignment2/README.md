@@ -1,4 +1,4 @@
-# ASSIGNMENT 1 By Group 3
+# ASSIGNMENT 2 By Group 3
 
 ## GROUP MEMBERS
 |Name|Roll No.|
@@ -16,7 +16,7 @@ Assignment2/
 │
 ├── README.md                 # Project overview and documentation
 │
-├── design.md                 # Design task documentation
+├── design.pdf                # Design task PDF document
 ├── designTask4.md            # Design Task 4 report
 ├── designTask6.md            # Design Task 6 report
 │

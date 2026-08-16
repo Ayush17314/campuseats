@@ -32,7 +32,7 @@ CampusEats/
 │
 ├── README.md                 # Project overview and documentation
 │
-├── design.md                 # Design task documentation
+├── design.pdf                # Design task PDF document
 ├── designTask4.md            # Design Task 4 report
 ├── designTask6.md            # Design Task 6 report
 │
