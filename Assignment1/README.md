@@ -1,55 +1,36 @@
-# ASSIGNMENT 1 By Group 3
+# Assignment 1 — HTTP and Network Analysis
 
-## GROUP MEMBERS
-|Name|Roll No.|
-|---|---|
-|AYUSH KUMAR DUBEY|20251651030|
-|ABHINAV JAIN|20251651003|
-|ANUJ GUPTA|20251651025|
-|BHARATH KUMAR MP|20251651031|
-|KAUSHIK NANDA UPADHAYA|20251651050|
+This assignment documents the HTTP behaviour of the local CampusEats Express API and examines how a production website loads in a browser.
 
- 
+## Files
 
-## Assignment 1 — Repository Architecture
+| File | Description |
+| --- | --- |
+| `brief.md` | CampusEats product brief defining users, core domain concepts, service boundaries, and key operations. |
+| `http-log.md` | Five annotated `curl` request/response examples for the local API, including successful `GET` and `HEAD` requests and a deliberate `404` case. |
+| `network-analysis.md` | Chrome DevTools Network-panel analysis of a Crunchyroll page load, covering request counts, transfer sizes, timings, redirects, and third-party resources. |
 
-```text
-Assignment1/
-│
-├── brief.md
-│   └── Assignment requirements and objectives
-│
-├── http-log.md
-│   └── HTTP requests and responses captured during testing
-│
-├── network-analysis.md
-│   └── Analysis of HTTP/network communication
-│
-└── README.md
-    └── Documentation and overview of Assignment 1
+## Local API used for the HTTP log
+
+From the repository root, run:
+
+```bash
+npm install
+node server.js
 ```
----
-## CONTENT
 
-`http-log.md`: Five annotated curl request/response pairs, including one 404 
-`network-analysis.md`: DevTools Network panel analysis of a real page load 
-`brief.md`: One-page CampusEats brief: what/who/nouns/verbs
----
-## Assignment Work
+The server listens on `http://localhost:3000`.
 
-This repository contains:
+| Endpoint | Result |
+| --- | --- |
+| `GET /api/restaurants` | Returns the full in-memory restaurant list. |
+| `GET /api/restaurants/:id` | Returns a restaurant by ID. |
+| `HEAD /api/restaurants/:id` | Returns response headers without a body. |
+| `GET /api/restaurants/999` | Demonstrates the API's `404 Not Found` response. |
 
-* HTTP request and response experiments using `curl`
-* Browser Network panel analysis
-* CampusEats system brief
-* Project documentation
+## Tools used
 
-## Technologies
-
-* HTTP
-* curl
-* Git
-* GitHub
-* Browser Developer Tools
-
-
+- Node.js and Express
+- `curl`
+- Chrome DevTools Network panel
+- Git and GitHub

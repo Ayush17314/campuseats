@@ -1,54 +1,40 @@
-# GROUP NO. 3
-## GROUP MEMBERS
-|Name|Roll No.|
-|---|---|
-|AYUSH KUMAR DUBEY|20251651030|
-|ABHINAV JAIN|20251651003|
-|ANUJ GUPTA|20251651025|
-|BHARATH KUMAR MP|20251651031|
-|KAUSHIK NANDA UPADHAYA|20251651050|  
+# CampusEats
 
-# campuseats
+CampusEats is a CS543 coursework repository for Group 3. It contains a small Express API used for HTTP exercises and the design artefacts for a campus food-ordering system.
 
-Coursework repo for CS543 — HTTP by hand and CampusEats service design.
+## Team
 
-## Contents
+| Name | Roll no. |
+| --- | --- |
+| Ayush Kumar Dubey | 20251651030 |
+| Abhinav Jain | 20251651003 |
+| Anuj Gupta | 20251651025 |
+| Bharath Kumar MP | 20251651031 |
+| Kaushik Nanda Upadhaya | 20251651050 |
 
-`server.js`:  A small Express API used to generate the HTTP request/response log 
+## Run the API
 
+Install dependencies, then start the local server:
 
-## Repository Architecture
-
-```text
-CampusEats/
-│
-├── Assignment1/
-│   ├── brief.md
-│   ├── http-log.md
-│   ├── network-analysis.md
-│   └── README.md
-│
-├──Assignment2/
-│
-├── README.md                 # Project overview and documentation
-│
-├── design.pdf                # Design task PDF document
-├── designTask4.md            # Design Task 4 report
-├── designTask6.md            # Design Task 6 report
-│
-├── designtask3.pdf           # Task 3 PDF document
-├── designTask6.pdf           # Task 6 PDF document
-│
-├── schema.drawio             # Editable database schema diagram
-├── Schema.png                # Exported schema image
-├── schema.sql                # SQL database schema
-│
-├── services-3.drawio         # Editable service architecture diagram
-└── services.drawio-3.png     # Exported service architecture image
-│
-├── .gitignore
-├── package.json
-├── package-lock.json
-├── README.md
-└── server.js
+```bash
+npm install
+node server.js
 ```
+
+The API listens on `http://localhost:3000` and returns an in-memory restaurant catalogue.
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/restaurants` | Returns all restaurants. |
+| `GET` | `/api/restaurants/:id` | Returns one restaurant, or a `404` JSON response when the ID does not exist. |
+
+## Repository contents
+
+| Path | Description |
+| --- | --- |
+| `server.js` | Express implementation of the sample restaurant API. |
+| `package.json` / `package-lock.json` | Node.js package metadata and locked dependencies. |
+| `Assignment1/` | HTTP-by-hand evidence, browser network analysis, and the CampusEats brief. |
+| `Assignment2/` | CampusEats service design, database schema, diagrams, and task reports. |
+
+See the README in each assignment directory for an itemized description of its deliverables.
