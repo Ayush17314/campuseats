@@ -15,8 +15,4 @@ Coursework repo for CS543 — HTTP by hand and CampusEats service design.
 `server.js`:  A small Express API used to generate the HTTP request/response log 
 
 
-## Assignment Work
 
-This repository contains:
-
-* HTTP request and response experiments using `curl`
