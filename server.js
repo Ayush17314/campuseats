@@ -25,6 +25,3 @@ app.get("/api/restaurants/:id", (req, res) => {
 
 app.listen(3000, () => console.log("listening on 3000"));
 
-//from kaushik
-//from bharath
-//from Ayushgi
