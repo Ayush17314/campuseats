@@ -28,12 +28,23 @@ CampusEats/
 │   ├── network-analysis.md
 │   └── README.md
 │
-├── Assignment2/
-│   ├── schema-2.drawio
-│   ├── schema-2.drawio.png
-│   ├── schema.sqlt 
-│   ├── services-3.drawio
-│   └── services.drawio-3.png
+├──Assignment2/
+│
+├── README.md                 # Project overview and documentation
+│
+├── design.md                 # Design task documentation
+├── designTask4.md            # Design Task 4 report
+├── designTask6.md            # Design Task 6 report
+│
+├── designtask3.pdf           # Task 3 PDF document
+├── designTask6.pdf           # Task 6 PDF document
+│
+├── schema.drawio             # Editable database schema diagram
+├── Schema.png                # Exported schema image
+├── schema.sql                # SQL database schema
+│
+├── services-3.drawio         # Editable service architecture diagram
+└── services.drawio-3.png     # Exported service architecture image
 │
 ├── .gitignore
 ├── package.json

@@ -14,20 +14,21 @@
 ```text
 Assignment2/
 │
-├── schema-2.drawio
-│   └── Editable database schema diagram
+├── README.md                 # Project overview and documentation
 │
-├── schema-2.drawio.png
-│   └── PNG representation of the database schema
+├── design.md                 # Design task documentation
+├── designTask4.md            # Design Task 4 report
+├── designTask6.md            # Design Task 6 report
 │
-├── schema.sql
-│   └── SQL database schema and table definitions
+├── designtask3.pdf           # Task 3 PDF document
+├── designTask6.pdf           # Task 6 PDF document
 │
-├── services-3.drawio
-│   └── Editable service architecture diagram
+├── schema.drawio             # Editable database schema diagram
+├── Schema.png                # Exported schema image
+├── schema.sql                # SQL database schema
 │
-└── services.drawio-3.png
-    └── PNG representation of the service architecture
+├── services-3.drawio         # Editable service architecture diagram
+└── services.drawio-3.png     # Exported service architecture image
 
 ```
 ---
