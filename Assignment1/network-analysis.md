@@ -6,16 +6,16 @@
 
 ## Results
 
-| Metric                  | Value                                                                             |
-|-------------------------|-----------------------------------------------------------------------------------|
-| Total number of requests| 307 |
-| Total transferred size  | 8.2 MB transferred / 13.9 MB resources (uncompressed)                             |
-| DOMContentLoaded        | 517 ms                                                                            |
-| Full page Load          | 1.12 s |
-| Slowest single resource | file name:ketch-sdk.js type: script — time 1.54s                                  |
-| Why it was slowest      | Third-party script (ketchjs.com — a consent/cookie-management SDK), loaded from an external CDN, not part of the page's own content                                                              |
-| 3xx responses seen      | One 301 redirect on 512.png (76 ms)                                               |
-| 4xx responses seen      | None observed                                                                     |
+| Metric|Value|
+|---|---|
+|Total number of requests|307|
+|Total transferred size|8.2 MB transferred / 13.9 MB resources (uncompressed)|
+|DOMContentLoaded|517 ms|
+|Full page Load|1.12 s|
+|Slowest single resource| file name:ketch-sdk.js type: script — time 1.54s|
+|Why it was slowest| Third-party script (ketchjs.com — a consent/cookie-management SDK), loaded from an external CDN, not part of the page's own content|
+|3xx responses seen|One 301 redirect on 512.png (76 ms)|
+|4xx responses seen|None observed|
 
 ## What the waterfall shows
 
