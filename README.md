@@ -38,3 +38,5 @@ The API listens on `http://localhost:3000` and returns an in-memory restaurant c
 | `Assignment2/` | CampusEats service design, database schema, diagrams, and task reports. |
 
 See the README in each assignment directory for an itemized description of its deliverables.
+
+This will be removed within minute.
