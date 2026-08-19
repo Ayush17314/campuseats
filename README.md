@@ -39,4 +39,3 @@ The API listens on `http://localhost:3000` and returns an in-memory restaurant c
 
 See the README in each assignment directory for an itemized description of its deliverables.
 
-This will be removed within minute.
