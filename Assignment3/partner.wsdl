@@ -34,13 +34,21 @@
                 <xsd:complexType>
                     <xsd:sequence>
                         <xsd:element name="approved" type="xsd:boolean"/>
+                        <xsd:element name="status" type="xsd:string"/>
                         <xsd:element name="transactionId" type="xsd:string"/>
                         <xsd:element name="chargedAmount" type="xsd:decimal"/>
                     </xsd:sequence>
                 </xsd:complexType>
             </xsd:element>
 
-            <xsd:element name="CardDeclinedFault">
+            <!--
+                PaymentFault: one generic fault shape covering every way a charge
+                can fail. errorCode is the machine-readable discriminator; this
+                integration demonstrates "card_declined", but a real gateway would
+                also use this same shape for values like "card_expired" or
+                "gateway_timeout".
+            -->
+            <xsd:element name="PaymentFault">
                 <xsd:complexType>
                     <xsd:sequence>
                         <xsd:element name="errorCode" type="xsd:string"/>
@@ -61,15 +69,15 @@
     <wsdl:message name="ApiCredentialsHeader">
         <wsdl:part name="credentials" element="tns:ApiCredentials"/>
     </wsdl:message>
-    <wsdl:message name="CardDeclinedFaultMessage">
-        <wsdl:part name="detail" element="tns:CardDeclinedFault"/>
+    <wsdl:message name="PaymentFaultMessage">
+        <wsdl:part name="detail" element="tns:PaymentFault"/>
     </wsdl:message>
 
     <wsdl:portType name="PaymentGatewayPortType">
         <wsdl:operation name="charge">
             <wsdl:input message="tns:ChargeRequestMessage"/>
             <wsdl:output message="tns:ChargeResponseMessage"/>
-            <wsdl:fault name="CardDeclined" message="tns:CardDeclinedFaultMessage"/>
+            <wsdl:fault name="PaymentDeclined" message="tns:PaymentFaultMessage"/>
         </wsdl:operation>
     </wsdl:portType>
 
@@ -84,8 +92,8 @@
             <wsdl:output>
                 <soap:body use="literal"/>
             </wsdl:output>
-            <wsdl:fault name="CardDeclined">
-                <soap:fault name="CardDeclined" use="literal"/>
+            <wsdl:fault name="PaymentDeclined">
+                <soap:fault name="PaymentDeclined" use="literal"/>
             </wsdl:fault>
         </wsdl:operation>
     </wsdl:binding>

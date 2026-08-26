@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:tns="https://payments.campuseats.example.com/soap">
+    <soap:Header>
+        <tns:ApiCredentials>
+            <tns:merchantId>CE-MERCHANT-4471</tns:merchantId>
+            <tns:accessToken>sk_live_9f2c7a1b</tns:accessToken>
+        </tns:ApiCredentials>
+    </soap:Header>
+    <soap:Body>
+        <tns:ChargeRequest>
+            <tns:orderId>ORD-20260826-0091</tns:orderId>
+            <tns:amount>300.00</tns:amount>
+            <tns:currency>INR</tns:currency>
+            <tns:cardToken>tok_9f2c</tns:cardToken>
+        </tns:ChargeRequest>
+    </soap:Body>
+</soap:Envelope>
