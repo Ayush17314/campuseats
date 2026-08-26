@@ -88,3 +88,32 @@ SOAPAction: "https://payments.campuseats.example.com/soap/charge"
     </soap:Body>
 </soap:Envelope>
 ```
+
+
+# Task 5:
+
+## Describe discovery (modern form)
+
+### Discovery
+
+CampusEats does not run its own UDDI server. Instead, discovery happens the way real partner integrations work today: CampusPay publishes its WSDL at a stable, versioned URL on its own developer/sandbox domain, and CampusEats' integration team retrieves it directly rather than querying a live registry at runtime.
+
+- **How CampusEats obtains the WSDL:** direct URL lookup — `https://sandbox.payments.example.com/campuseats/PaymentGateway?wsdl`. This is the same endpoint declared in `partner.wsdl`'s `<soap:address location="...">`, with the conventional `?wsdl` query parameter that most SOAP servers use to expose their own contract.
+
+- **Why not a live registry:** UDDI-style dynamic lookup at request time went out of common use; the "modern form" of discovery is a one-time, human-curated catalogue entry — checked in alongside the code — that records where the contract lives. Any change to the partner's WSDL is picked up by updating this one entry, not by querying a directory service on every call.
+
+- **Where this record lives in practice:** a service catalogue (e.g. an internal developer portal, a `partners/` folder in the repo, or a tool like Backstage) that lists every external dependency CampusEats has, one row per partner operation.
+
+### Registry entry (tModel-style pointer)
+
+| Field | Value |
+|---|---|
+| **Business** | CampusPay Payment Gateway |
+| **Service** | PaymentGatewayService — `charge` operation |
+| **Endpoint** | `https://sandbox.payments.example.com/campuseats/PaymentGateway` |
+| **WSDL (tModel pointer)** | `https://sandbox.payments.example.com/campuseats/PaymentGateway?wsdl` |
+| **Binding** | `PaymentGatewaySoapBinding` (SOAP 1.1 over HTTP, document style) |
+| **Namespace** | `https://payments.campuseats.example.com/soap` |
+
+This single record plays the same role a UDDI `businessEntity` + `tModel` pair used to play — it tells any CampusEats service exactly which business it's calling, which contract that business speaks, and where to fetch that contract from, without needing a live registry to resolve it at runtime.
+
