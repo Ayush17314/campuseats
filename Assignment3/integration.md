@@ -117,3 +117,36 @@ CampusEats does not run its own UDDI server. Instead, discovery happens the way 
 
 This single record plays the same role a UDDI `businessEntity` + `tModel` pair used to play — it tells any CampusEats service exactly which business it's calling, which contract that business speaks, and where to fetch that contract from, without needing a live registry to resolve it at runtime.
 
+
+# Task 6
+
+# Fault Mapping
+
+## Overview
+
+The integration layer translates partner-specific SOAP faults into the error codes defined by our `placeOrder` contract.
+
+The partner's internal fault names are **not exposed to students or clients**. This keeps the partner's vocabulary isolated from our own API contract.
+
+## Fault Mapping Table
+
+| Partner SOAP Fault | Our `placeOrder` Error | Meaning |
+|---|---|---|
+| `card_declined` | `PAYMENT_DECLINED` | The payment was rejected |
+| `payment_failed` | `PAYMENT_FAILED` | Payment processing failed |
+| `item_not_found` | `ITEM_NOT_FOUND` | A requested food item does not exist |
+| `item_unavailable` | `ITEM_UNAVAILABLE` | A requested food item is currently unavailable |
+| `invalid_quantity` | `INVALID_QUANTITY` | The requested quantity is invalid |
+| `invalid_address` | `INVALID_ADDRESS` | The delivery address is invalid or unavailable |
+| `no_rider_available` | `NO_RIDER_AVAILABLE` | A rider cannot currently be assigned |
+| `empty_cart` | `EMPTY_CART` | No food items were provided |
+
+## Example
+
+If the partner SOAP service returns:
+
+```xml
+<soap:Fault>
+    <faultcode>soap:Client</faultcode>
+    <faultstring>card_declined</faultstring>
+</soap:Fault>
