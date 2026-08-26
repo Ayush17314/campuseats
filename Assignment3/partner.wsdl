@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:tns="https://payments.campuseats.example.com/soap"
+    targetNamespace="https://payments.campuseats.example.com/soap">
+
+    <wsdl:types>
+        <xsd:schema
+            targetNamespace="https://payments.campuseats.example.com/soap"
+            elementFormDefault="qualified">
+            <xsd:element name="ApiCredentials">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="merchantId" type="xsd:string"/>
+                        <xsd:element name="accessToken" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="ChargeRequest">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="orderId" type="xsd:string"/>
+                        <xsd:element name="amount" type="xsd:decimal"/>
+                        <xsd:element name="currency" type="xsd:string"/>
+                        <xsd:element name="cardToken" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="ChargeResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="approved" type="xsd:boolean"/>
+                        <xsd:element name="transactionId" type="xsd:string"/>
+                        <xsd:element name="chargedAmount" type="xsd:decimal"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="CardDeclinedFault">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="errorCode" type="xsd:string"/>
+                        <xsd:element name="message" type="xsd:string"/>
+                        <xsd:element name="providerReference" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:schema>
+    </wsdl:types>
+
+    <wsdl:message name="ChargeRequestMessage">
+        <wsdl:part name="parameters" element="tns:ChargeRequest"/>
+    </wsdl:message>
+    <wsdl:message name="ChargeResponseMessage">
+        <wsdl:part name="parameters" element="tns:ChargeResponse"/>
+    </wsdl:message>
+    <wsdl:message name="ApiCredentialsHeader">
+        <wsdl:part name="credentials" element="tns:ApiCredentials"/>
+    </wsdl:message>
+    <wsdl:message name="CardDeclinedFaultMessage">
+        <wsdl:part name="detail" element="tns:CardDeclinedFault"/>
+    </wsdl:message>
+
+    <wsdl:portType name="PaymentGatewayPortType">
+        <wsdl:operation name="charge">
+            <wsdl:input message="tns:ChargeRequestMessage"/>
+            <wsdl:output message="tns:ChargeResponseMessage"/>
+            <wsdl:fault name="CardDeclined" message="tns:CardDeclinedFaultMessage"/>
+        </wsdl:operation>
+    </wsdl:portType>
+
+    <wsdl:binding name="PaymentGatewaySoapBinding" type="tns:PaymentGatewayPortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="charge">
+            <soap:operation soapAction="https://payments.campuseats.example.com/soap/charge"/>
+            <wsdl:input>
+                <soap:header message="tns:ApiCredentialsHeader" part="credentials" use="literal"/>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="CardDeclined">
+                <soap:fault name="CardDeclined" use="literal"/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+
+    <wsdl:service name="PaymentGatewayService">
+        <wsdl:port name="PaymentGatewaySoapPort" binding="tns:PaymentGatewaySoapBinding">
+            <soap:address location="https://sandbox.payments.example.com/campuseats/PaymentGateway"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
