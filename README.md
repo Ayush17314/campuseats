@@ -2,7 +2,7 @@
 
 CampusEats is a CS543 coursework repository for Group 3. It contains a small Express API used for HTTP exercises and the design artefacts for a campus food-ordering system.
 
-## Team
+## TeamID 03
 
 | Name | Roll no. |
 | --- | --- |
@@ -36,6 +36,7 @@ The API listens on `http://localhost:3000` and returns an in-memory restaurant c
 | `package.json` / `package-lock.json` | Node.js package metadata and locked dependencies. |
 | `Assignment1/` | HTTP-by-hand evidence, browser network analysis, and the CampusEats brief. |
 | `Assignment2/` | CampusEats service design, database schema, diagrams, and task reports. |
+| `Assignment3/` | Integrate an External SOAP Partner into CampusEats at the contract level|
 
 See the README in each assignment directory for an itemized description of its deliverables.
 

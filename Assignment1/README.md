@@ -1,3 +1,13 @@
+## TeamID 03
+
+| Name | Roll no. |
+| --- | --- |
+| Ayush Kumar Dubey | 20251651030 |
+| Abhinav Jain | 20251651003 |
+| Anuj Gupta | 20251651025 |
+| Bharath Kumar MP | 20251651031 |
+| Kaushik Nanda Upadhaya | 20251651050 |
+
 # Assignment 1 — HTTP and Network Analysis
 
 This assignment documents the HTTP behaviour of the local CampusEats Express API and examines how a production website loads in a browser.
