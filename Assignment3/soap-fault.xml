@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:tns="https://payments.campuseats.example.com/soap">
+    <soap:Body>
+        <soap:Fault>
+            <faultcode>soap:Client</faultcode>
+            <faultstring>Card declined</faultstring>
+            <detail>
+                <tns:PaymentFault>
+                    <tns:errorCode>card_declined</tns:errorCode>
+                    <tns:message>The card issuer declined this charge.</tns:message>
+                    <tns:providerReference>evt_7d3f2a</tns:providerReference>
+                </tns:PaymentFault>
+            </detail>
+        </soap:Fault>
+    </soap:Body>
+</soap:Envelope>
