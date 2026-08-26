@@ -3,6 +3,8 @@
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+    xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
     xmlns:tns="https://payments.campuseats.example.com/soap"
     targetNamespace="https://payments.campuseats.example.com/soap">
 
@@ -10,20 +12,28 @@
         <xsd:schema
             targetNamespace="https://payments.campuseats.example.com/soap"
             elementFormDefault="qualified">
-            <xsd:element name="ApiCredentials">
-                <xsd:complexType>
-                    <xsd:sequence>
-                        <xsd:element name="merchantId" type="xsd:string"/>
-                        <xsd:element name="accessToken" type="xsd:string"/>
-                    </xsd:sequence>
-                </xsd:complexType>
-            </xsd:element>
+
+            <!--
+                Real WS-Security: instead of authoring our own credentials shape,
+                we import the standard OASIS WS-Security schema and use its
+                wsse:Security element directly as our SOAP header. This is how a
+                real bank integration authenticates and prevents replay attacks.
+            -->
+            <xsd:import
+                namespace="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+                schemaLocation="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"/>
+            <xsd:import
+                namespace="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+                schemaLocation="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"/>
 
             <xsd:element name="ChargeRequest">
                 <xsd:complexType>
                     <xsd:sequence>
                         <xsd:element name="orderId" type="xsd:string"/>
-                        <xsd:element name="amount" type="xsd:decimal"/>
+                        <!-- Prevents double-charging if Orders retries after a timeout -->
+                        <xsd:element name="idempotencyKey" type="xsd:string"/>
+                        <!-- Integer minor units (paise), never a decimal, to avoid rounding errors -->
+                        <xsd:element name="amountMinorUnits" type="xsd:long"/>
                         <xsd:element name="currency" type="xsd:string"/>
                         <xsd:element name="cardToken" type="xsd:string"/>
                     </xsd:sequence>
@@ -36,7 +46,7 @@
                         <xsd:element name="approved" type="xsd:boolean"/>
                         <xsd:element name="status" type="xsd:string"/>
                         <xsd:element name="transactionId" type="xsd:string"/>
-                        <xsd:element name="chargedAmount" type="xsd:decimal"/>
+                        <xsd:element name="chargedAmountMinorUnits" type="xsd:long"/>
                     </xsd:sequence>
                 </xsd:complexType>
             </xsd:element>
@@ -66,8 +76,9 @@
     <wsdl:message name="ChargeResponseMessage">
         <wsdl:part name="parameters" element="tns:ChargeResponse"/>
     </wsdl:message>
-    <wsdl:message name="ApiCredentialsHeader">
-        <wsdl:part name="credentials" element="tns:ApiCredentials"/>
+    <!-- Standard WS-Security header: a wsse:Security block, not a custom credentials type -->
+    <wsdl:message name="SecurityHeader">
+        <wsdl:part name="security" element="wsse:Security"/>
     </wsdl:message>
     <wsdl:message name="PaymentFaultMessage">
         <wsdl:part name="detail" element="tns:PaymentFault"/>
@@ -86,7 +97,7 @@
         <wsdl:operation name="charge">
             <soap:operation soapAction="https://payments.campuseats.example.com/soap/charge"/>
             <wsdl:input>
-                <soap:header message="tns:ApiCredentialsHeader" part="credentials" use="literal"/>
+                <soap:header message="tns:SecurityHeader" part="security" use="literal"/>
                 <soap:body use="literal"/>
             </wsdl:input>
             <wsdl:output>
