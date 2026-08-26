@@ -6,7 +6,7 @@
             <tns:approved>true</tns:approved>
             <tns:status>captured</tns:status>
             <tns:transactionId>tx_5521</tns:transactionId>
-            <tns:chargedAmount>300.00</tns:chargedAmount>
+            <tns:chargedAmountMinorUnits>30000</tns:chargedAmountMinorUnits>
         </tns:ChargeResponse>
     </soap:Body>
 </soap:Envelope>
