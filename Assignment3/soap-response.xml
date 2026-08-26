@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:tns="https://payments.campuseats.example.com/soap">
+    <soap:Body>
+        <tns:ChargeResponse>
+            <tns:approved>true</tns:approved>
+            <tns:status>captured</tns:status>
+            <tns:transactionId>tx_5521</tns:transactionId>
+            <tns:chargedAmount>300.00</tns:chargedAmount>
+        </tns:ChargeResponse>
+    </soap:Body>
+</soap:Envelope>
