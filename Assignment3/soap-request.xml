@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-               xmlns:tns="https://payments.campuseats.example.com/soap">
+               xmlns:tns="https://payments.campuseats.example.com/soap"
+               xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+               xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
     <soap:Header>
-        <tns:ApiCredentials>
-            <tns:merchantId>CE-MERCHANT-4471</tns:merchantId>
-            <tns:accessToken>sk_live_9f2c7a1b</tns:accessToken>
-        </tns:ApiCredentials>
+        <wsse:Security soap:mustUnderstand="1">
+            <wsu:Timestamp wsu:Id="TS-1">
+                <wsu:Created>2026-08-26T09:15:00Z</wsu:Created>
+                <wsu:Expires>2026-08-26T09:20:00Z</wsu:Expires>
+            </wsu:Timestamp>
+            <wsse:UsernameToken wsu:Id="UT-1">
+                <wsse:Username>CE-MERCHANT-4471</wsse:Username>
+                <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">Xk3f9s0aP2m7QeH1v9c0jklm3Rk=</wsse:Password>
+                <wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">MTIzNDU2Nzg5MA==</wsse:Nonce>
+                <wsu:Created>2026-08-26T09:15:00Z</wsu:Created>
+            </wsse:UsernameToken>
+        </wsse:Security>
     </soap:Header>
     <soap:Body>
         <tns:ChargeRequest>
             <tns:orderId>ORD-20260826-0091</tns:orderId>
-            <tns:amount>300.00</tns:amount>
+            <tns:idempotencyKey>idem_7f3a9c21e4</tns:idempotencyKey>
+            <tns:amountMinorUnits>30000</tns:amountMinorUnits>
             <tns:currency>INR</tns:currency>
             <tns:cardToken>tok_9f2c</tns:cardToken>
         </tns:ChargeRequest>
