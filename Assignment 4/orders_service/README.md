@@ -8,7 +8,7 @@ $env:PAYMENTS_BASE_URL = "http://127.0.0.1:5001"
 python app.py
 ```
 
-`PAYMENTS_BASE_URL` must point to the Tutorial 4 Payments service. The client sends `POST /charges` with `orderId`, `amountMinorUnits`, `cardToken`, and the incoming `Idempotency-Key` header.
+`PAYMENTS_BASE_URL` must point to the Tutorial 4 Payments service. The client sends `POST /charges` with `orderId`, `amountMinorUnits`, `cardToken`, and the incoming `Idempotency-Key` header. If that service is unavailable locally, use the separate `../payments_service` demo helper; it is not part of the Orders submission folder.
 
 ## Verify
 

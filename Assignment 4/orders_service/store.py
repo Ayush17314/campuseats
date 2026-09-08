@@ -1,6 +1,7 @@
 """In-process data owned exclusively by the Orders service."""
 
 from models import Order
+from typing import Any
 
 
 class OrderStore:
