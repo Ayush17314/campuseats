@@ -1,20 +1,15 @@
-# OpenAPI validation evidence
+# OpenAPI validation
 
-Command run from the repository root:
+Validated locally from the `orders_service` folder:
 
 ```powershell
-npx.cmd --yes @redocly/cli lint 'Assignment 4/orders_service/openapi.yaml'
+python -m openapi_spec_validator openapi.yaml
 ```
 
-Terminal output:
+Output:
 
 ```text
-No configurations were provided -- using built in recommended configuration by default.
-
-validating Assignment 4\orders_service\openapi.yaml...
-Assignment 4\orders_service\openapi.yaml: validated in 45ms
-
-Woohoo! Your API description is valid. 🎉
+openapi.yaml: OK
 ```
 
-The final contract has 227 lines and was validated with zero errors and zero warnings.
+The validator completed with exit code 0.
