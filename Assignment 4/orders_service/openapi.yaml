@@ -1,0 +1,227 @@
+openapi: 3.0.3
+info:
+  title: CampusEats Orders API
+  version: 1.0.0
+  description: Creates, retrieves, lists, and cancels CampusEats food orders.
+  license:
+    name: Coursework use only
+    url: https://campuseats.example/coursework-license
+servers:
+  - url: https://orders.campuseats.example
+security: []
+paths:
+  /orders:
+    post:
+      summary: Create an order
+      operationId: createOrder
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created, or the original order returned for a repeated idempotency key.
+          headers:
+            Location:
+              required: true
+              schema:
+                type: string
+              description: Relative URL of the order resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/PaymentDeclined'
+        '503':
+          $ref: '#/components/responses/PaymentUnavailable'
+    get:
+      summary: List a student's orders
+      operationId: listOrders
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Orders belonging to the requested student.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [orders]
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /orders/{orderId}:
+    get:
+      summary: Retrieve an order
+      operationId: getOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: The order representation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orders/{orderId}/cancellation:
+    post:
+      summary: Cancel a confirmed order
+      operationId: cancelOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  maxLength: 200
+      responses:
+        '200':
+          description: The order was cancelled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^ORD-[0-9]{6}$'
+  responses:
+    BadRequest:
+      description: The request body, header, or query parameter is invalid.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: The requested order does not exist.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    StateConflict:
+      description: The requested change conflicts with the current order state.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PaymentDeclined:
+      description: Payment was reachable but declined the valid order request.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PaymentUnavailable:
+      description: Payment could not be confirmed after retrying safe transport failures.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    CreateOrderRequest:
+      type: object
+      additionalProperties: false
+      required: [userId, addressId, items, cardToken]
+      properties:
+        userId:
+          type: integer
+          minimum: 1
+        addressId:
+          type: integer
+          minimum: 1
+        cardToken:
+          type: string
+          minLength: 1
+          writeOnly: true
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItemInput'
+    OrderItemInput:
+      type: object
+      additionalProperties: false
+      required: [itemId, quantity, unitPrice]
+      properties:
+        itemId:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+        unitPrice:
+          type: string
+          pattern: '^[0-9]+(\\.[0-9]{1,2})?$'
+    Order:
+      type: object
+      required: [orderId, userId, addressId, items, totalAmount, status]
+      properties:
+        orderId:
+          type: string
+          example: ORD-000001
+        userId:
+          type: integer
+        addressId:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemInput'
+        totalAmount:
+          type: string
+          example: '251.00'
+        status:
+          type: string
+          enum: [confirmed, cancelled]
+    Problem:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
