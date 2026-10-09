@@ -1,0 +1,78 @@
+CampusEats Assignment 5 — curl -v transcript
+
+CREATE: POST /orders
+> POST /orders HTTP/1.1
+> Host: 127.0.0.1:5000
+> Authorization: Bearer demo-token
+> Idempotency-Key: transcript-final
+> Content-Type: application/json
+>
+> {"userId":7,"addressId":11,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}]}
+< HTTP/1.1 201 CREATED
+< Content-Type: application/json
+< Location: /orders/ORD-000001
+< X-RateLimit-Limit: 100
+< X-RateLimit-Remaining: 98
+< X-Content-Type-Options: nosniff
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Access-Control-Allow-Origin: *
+<
+{"addressId":11,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}],"orderId":"ORD-000001","status":"confirmed","totalAmount":"251.00","userId":7}
+
+IDEMPOTENT REPEAT: POST /orders with the same Idempotency-Key
+> Idempotency-Key: transcript-final
+< HTTP/1.1 201 CREATED
+< Location: /orders/ORD-000001
+< X-RateLimit-Limit: 100
+< X-RateLimit-Remaining: 96
+<
+{"addressId":11,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}],"orderId":"ORD-000001","status":"confirmed","totalAmount":"251.00","userId":7}
+
+CONDITIONAL GET: GET /orders/ORD-000001
+> Authorization: Bearer demo-token
+> If-None-Match: 6c26ec7ee57f4717cf87c62d3d64f81c049711ad4ec0f14567df150775c6c421
+< HTTP/1.1 304 NOT MODIFIED
+< ETag: "6c26ec7ee57f4717cf87c62d3d64f81c049711ad4ec0f14567df150775c6c421"
+< Cache-Control: private, max-age=60
+< X-RateLimit-Limit: 100
+< X-RateLimit-Remaining: 97
+< X-Content-Type-Options: nosniff
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Access-Control-Allow-Origin: *
+
+STALE CONDITIONAL WRITE: PUT /orders/ORD-000001
+> Authorization: Bearer demo-token
+> If-Match: "stale"
+> Content-Type: application/json
+>
+> {"addressId":12,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}]}
+< HTTP/1.1 412 PRECONDITION FAILED
+< Content-Type: application/json
+< X-RateLimit-Limit: 100
+< X-RateLimit-Remaining: 87
+<
+{"detail":"The order changed; retrieve its current ETag before retrying.","status":412,"title":"Precondition failed","type":"https://campuseats.example/problems/precondition-failed"}
+
+INVALID REQUEST: POST /orders
+> Authorization: Bearer demo-token
+> Idempotency-Key: bad-verified
+> Content-Type: application/json
+>
+> {"userId":7}
+< HTTP/1.1 400 BAD REQUEST
+< Content-Type: application/json
+<
+{"detail":"Missing required field(s): addressId, cardToken, items.","status":400,"title":"Invalid request","type":"https://campuseats.example/problems/invalid-request"}
+
+MISSING ORDER: GET /orders/ORD-999999
+> Authorization: Bearer demo-token
+< HTTP/1.1 404 NOT FOUND
+< Content-Type: application/json
+<
+{"detail":"No order exists with id ORD-999999.","status":404,"title":"Order not found","type":"https://campuseats.example/problems/order-not-found"}
+
+MISSING AUTHORIZATION: GET /orders/ORD-999999
+< HTTP/1.1 401 UNAUTHORIZED
+< Content-Type: application/json
+<
+{"detail":"Authorization: Bearer <token> is required.","status":401,"title":"Unauthorized","type":"https://campuseats.example/problems/unauthorized"}
