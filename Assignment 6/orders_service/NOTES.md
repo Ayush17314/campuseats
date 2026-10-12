@@ -51,3 +51,12 @@ The type is the stable problem identifier; title is a short summary; status repe
 ## 4. One response reporting multiple invalid fields
 
 The transcript submits userId=0, addressId=0, and items[0].quantity=0. It receives one 422 response whose errors array identifies all three fields and explains that each must be a positive integer. Validation rejects the request before payment is attempted.
+
+
+## 5. Retry safety
+
+- GET is safe to repeat. A matching If-None-Match returns 304 without an order body.
+- POST /orders can be retried after a timeout or transient 503 with the same Idempotency-Key; a completed request returns the original 201 order rather than charging again. A 503 supplies Retry-After.
+- A 429 response supplies Retry-After; retry after that interval if the request is still valid.
+- Do not retry unchanged 4xx requests. A 412 requires fetching the current order and using its current ETag in If-Match.
+- DELETE has an idempotent intended effect, but repeating it returns 404 after the first 204. Cancellation changes state; a repeat returns 409, so inspect order state rather than blindly retrying.
