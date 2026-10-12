@@ -34,3 +34,20 @@ Unsupported paths and methods return 404 and 405 respectively. Rate-limit respon
 - https://campuseats.example/problems/illegal-transition — cancellation is requested for an order already cancelled.
 - about:blank — general HTTP conditions such as authentication failure, unsupported representation, rate limiting, or failed request preconditions.
 
+## 3. Problem Details body and field meanings
+
+Example returned for an unknown order ID:
+
+    {
+      "type": "https://campuseats.example/problems/order-not-found",
+      "title": "Order Not Found",
+      "status": 404,
+      "detail": "No order exists with the requested id."
+    }
+
+The type is the stable problem identifier; title is a short summary; status repeats the HTTP status; detail explains this occurrence. Validation responses add errors, an array of field and message entries.
+
+
+## 4. One response reporting multiple invalid fields
+
+The transcript submits userId=0, addressId=0, and items[0].quantity=0. It receives one 422 response whose errors array identifies all three fields and explains that each must be a positive integer. Validation rejects the request before payment is attempted.
