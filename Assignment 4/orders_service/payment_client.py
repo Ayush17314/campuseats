@@ -18,7 +18,10 @@ class PaymentDeclined(Exception):
 
 def charge(order_id: str, amount_minor_units: int, card_token: str, idempotency_key: str) -> str:
     """Retry only network/timeout/5xx failures and forward the same idempotency key."""
-    base_url = os.environ.get("PAYMENTS_BASE_URL", "http://127.0.0.1:5001").rstrip("/")
+    base_url = os.environ.get("PAYMENTS_BASE_URL")
+    if not base_url:
+        raise PaymentUnavailable("PAYMENTS_BASE_URL is not configured.")
+    base_url = base_url.rstrip("/")
     request = Request(
         f"{base_url}/charges",
         data=json.dumps({

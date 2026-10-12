@@ -1,0 +1,19 @@
+openapi: 3.0.3
+info: {title: CampusEats Orders API, version: 2.0.0, description: Assignment 5 HTTP methods and headers.}
+servers: [{url: https://orders.campuseats.example}]
+paths:
+  /orders:
+    get: {summary: List orders using userId, status, sort, direction, page and pageSize query parameters, responses: {'200': {description: JSON orders}, '400': {description: Invalid query}, '401': {description: Bearer token missing}, '406': {description: Unsupported Accept}, '429': {description: Rate limit}}}
+    post: {summary: Create order; repeat Idempotency-Key returns original, parameters: [{name: Authorization, in: header, required: true, schema: {type: string}}, {name: Idempotency-Key, in: header, required: true, schema: {type: string}}], requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateOrder'}}}}, responses: {'201': {description: Created, headers: {Location: {schema: {type: string}}}}, '400': {description: Invalid request}, '422': {description: Domain refusal}}}
+    options: {responses: {'204': {description: Preflight, headers: {Allow: {schema: {type: string}}}}}}
+  /orders/{orderId}:
+    get: {summary: Cacheable single-item read; supports If-None-Match, responses: {'200': {description: Order, headers: {ETag: {schema: {type: string}}, Cache-Control: {schema: {type: string}}}}, '304': {description: Not modified}, '401': {description: Unauthorized}, '404': {description: Missing}}}
+    put: {summary: Replace address and items; requires If-Match, parameters: [{name: If-Match, in: header, required: true, schema: {type: string}}], responses: {'200': {description: Updated}, '412': {description: ETag is stale}, '428': {description: If-Match missing}}}
+    delete: {summary: Remove order, responses: {'204': {description: Deleted}}}
+    post: {summary: Documented constrained-client fallback only; X-HTTP-Method-Override PUT or DELETE, parameters: [{name: X-HTTP-Method-Override, in: header, required: true, schema: {type: string}}], responses: {'200': {description: Updated}, '204': {description: Deleted}}}
+    options: {responses: {'204': {description: Preflight, headers: {Allow: {schema: {type: string}}}}}}
+  /orders/{orderId}/cancellation:
+    post: {summary: Non-CRUD cancellation sub-resource, responses: {'200': {description: Cancelled}, '409': {description: Already cancelled}}}
+components:
+  schemas:
+    CreateOrder: {type: object, required: [userId, addressId, items, cardToken], properties: {userId: {type: integer}, addressId: {type: integer}, cardToken: {type: string}, items: {type: array}}}

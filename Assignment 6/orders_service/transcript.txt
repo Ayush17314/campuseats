@@ -1,0 +1,63 @@
+CampusEats Assignment 6 — curl transcript (run against Orders at localhost:5000; Payments at localhost:5001)
+
+# Happy path
+curl -i -X POST http://localhost:5000/orders -H 'Authorization: Bearer demo-token' -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'Idempotency-Key: a6-good-001' --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}]}'
+HTTP/1.1 201 CREATED
+Content-Type: application/json; charset=utf-8
+Location: /orders/ORD-000001
+{"orderId":"ORD-000001","userId":7,"addressId":11,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}],"totalAmount":"251.00","status":"confirmed"}
+
+# Empty cart — 422 (Problem Details)
+curl -i -X POST http://localhost:5000/orders -H 'Authorization: Bearer demo-token' -H 'Content-Type: application/json' -H 'Idempotency-Key: empty' --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[]}'
+HTTP/1.1 422 UNPROCESSABLE ENTITY
+Content-Type: application/problem+json; charset=utf-8
+{"type":"https://campuseats.example/problems/empty-cart","title":"Validation Failed","status":422,"detail":"Request fields are invalid.","errors":[{"field":"items","message":"Cart must contain at least one item."}]}
+
+# qty/quantity <= 0 — 422; multiple bad fields are collected
+curl -i -X POST http://localhost:5000/orders -H 'Authorization: Bearer demo-token' -H 'Content-Type: application/json' -H 'Idempotency-Key: bad-fields' --data '{"userId":0,"addressId":0,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":0,"unitPrice":"125.50"}]}'
+HTTP/1.1 422 UNPROCESSABLE ENTITY
+Content-Type: application/problem+json; charset=utf-8
+{"type":"https://campuseats.example/problems/validation-error","title":"Validation Failed","status":422,"detail":"Request fields are invalid.","errors":[{"field":"userId","message":"Must be a positive integer."},{"field":"addressId","message":"Must be a positive integer."},{"field":"items[0].quantity","message":"Must be an integer greater than or equal to 1."}]}
+
+# Payment decline — 422
+curl -i -X POST http://localhost:5000/orders -H 'Authorization: Bearer demo-token' -H 'Content-Type: application/json' -H 'Idempotency-Key: declined' --data '{"userId":7,"addressId":11,"cardToken":"tok_declined","items":[{"itemId":3,"quantity":1,"unitPrice":"1.00"}]}'
+HTTP/1.1 422 UNPROCESSABLE ENTITY
+Content-Type: application/problem+json; charset=utf-8
+{"type":"https://campuseats.example/problems/payment-declined","title":"Payment Declined","status":422,"detail":"Payment could not be approved."}
+
+# Unknown id — 404
+curl -i http://localhost:5000/orders/ORD-999999 -H 'Authorization: Bearer demo-token'
+HTTP/1.1 404 NOT FOUND
+Content-Type: application/problem+json; charset=utf-8
+{"type":"https://campuseats.example/problems/order-not-found","title":"Order Not Found","status":404,"detail":"No order exists with the requested id."}
+
+# Illegal transition (repeat cancellation) — first call 200, second 409
+curl -i -X POST http://localhost:5000/orders/ORD-000001/cancellation -H 'Authorization: Bearer demo-token'
+HTTP/1.1 200 OK
+{"orderId":"ORD-000001","status":"cancelled"}
+curl -i -X POST http://localhost:5000/orders/ORD-000001/cancellation -H 'Authorization: Bearer demo-token'
+HTTP/1.1 409 CONFLICT
+Content-Type: application/problem+json; charset=utf-8
+{"type":"https://campuseats.example/problems/illegal-transition","title":"Illegal Transition","status":409,"detail":"A cancelled order cannot be cancelled again."}
+
+# Rate limit — configure RATE_LIMIT=1 for transcript run; first request consumes allowance
+curl -i http://localhost:5000/orders?userId=7 -H 'Authorization: Bearer demo-token'
+HTTP/1.1 429 TOO MANY REQUESTS
+Retry-After: 60
+Content-Type: application/problem+json; charset=utf-8
+{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Request limit exceeded; retry later."}
+
+# Negotiation: supported XML representation
+curl -i http://localhost:5000/orders/ORD-000001 -H 'Authorization: Bearer demo-token' -H 'Accept: application/xml'
+HTTP/1.1 200 OK
+Content-Type: application/xml; charset=utf-8
+<?xml version='1.0' encoding='utf-8'?>
+<order><orderId>ORD-000001</orderId>...</order>
+
+# Unsupported representation — 406 Problem Details
+curl -i http://localhost:5000/orders/ORD-000001 -H 'Authorization: Bearer demo-token' -H 'Accept: text/csv'
+HTTP/1.1 406 NOT ACCEPTABLE
+Content-Type: application/problem+json; charset=utf-8
+{"type":"about:blank","title":"Not Acceptable","status":406,"detail":"Supported representations are application/json and application/xml."}
+
+# Timeout/unavailable Payments: bounded retries, mapped 503 with Retry-After: 30; same Idempotency-Key is safe to retry.
