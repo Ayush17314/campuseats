@@ -2,115 +2,485 @@ openapi: 3.0.3
 info:
   title: CampusEats Orders API
   version: 3.0.0
-  description: Assignment 6 status codes, validation, negotiation, and Problem Details.
+  description: >-
+    CampusEats Orders Service combining Assignment 5 HTTP protocol semantics
+    (Bearer auth, ETag conditional requests, rate limiting, CORS, pagination)
+    and Assignment 6 honest status codes, RFC 7807 Problem Details, multi-field
+    validation, and JSON/XML content negotiation.
 servers:
   - url: http://localhost:5000
 paths:
   /orders:
+    options:
+      summary: Discover allowed methods on the orders collection
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Allow:
+              schema:
+                type: string
     post:
       summary: Create an order; repeated Idempotency-Key returns original order
       parameters:
-        - {name: Authorization, in: header, required: true, schema: {type: string}}
-        - {name: Idempotency-Key, in: header, required: true, schema: {type: string}}
+        - $ref: '#/components/parameters/Authorization'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - $ref: '#/components/parameters/Accept'
       requestBody:
         required: true
         content:
           application/json:
-            schema: {$ref: '#/components/schemas/CreateOrder'}
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
       responses:
-        '201': {description: Created, headers: {Location: {schema: {type: string}}}, content: {application/json: {schema: {$ref: '#/components/schemas/Order'}}, application/xml: {schema: {type: string}}}}
-        '400': {$ref: '#/components/responses/Problem'}
-        '401': {$ref: '#/components/responses/Problem'}
-        '406': {$ref: '#/components/responses/Problem'}
-        '422': {$ref: '#/components/responses/Problem'}
-        '429': {$ref: '#/components/responses/Problem'}
-        '503': {$ref: '#/components/responses/Problem'}
+        '201':
+          description: Order created (or replayed via Idempotency-Key)
+          headers:
+            Location:
+              schema:
+                type: string
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+            application/xml:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '406':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/RetryableProblem'
+        '503':
+          $ref: '#/components/responses/RetryableProblem'
     get:
-      summary: List orders for a user
+      summary: List orders for a user with optional filtering, sorting, and pagination
       parameters:
-        - {name: userId, in: query, required: true, schema: {type: integer, minimum: 1}}
-        - {name: Authorization, in: header, required: true, schema: {type: string}}
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/Accept'
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [confirmed, cancelled]
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [orderId, totalAmount]
+        - name: direction
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
       responses:
-        '200': {description: Orders list}
-        '400': {$ref: '#/components/responses/Problem'}
-        '401': {$ref: '#/components/responses/Problem'}
-        '406': {$ref: '#/components/responses/Problem'}
-        '429': {$ref: '#/components/responses/Problem'}
+        '200':
+          description: Paginated orders list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderList'
+            application/xml:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '406':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/RetryableProblem'
   /orders/{orderId}:
     parameters:
-      - {name: orderId, in: path, required: true, schema: {type: string}}
-    get:
-      summary: Read order (supports conditional GET)
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+    options:
+      summary: Discover allowed methods on a single order resource
       responses:
-        '200': {description: Order representation}
-        '304': {description: Unchanged representation}
-        '401': {$ref: '#/components/responses/Problem'}
-        '404': {$ref: '#/components/responses/Problem'}
-        '406': {$ref: '#/components/responses/Problem'}
-        '429': {$ref: '#/components/responses/Problem'}
-    patch:
-      summary: Replace address and items using If-Match
+        '204':
+          description: No Content
+          headers:
+            Allow:
+              schema:
+                type: string
+    get:
+      summary: Read an order by ID (supports conditional GET via If-None-Match)
       parameters:
-        - {name: If-Match, in: header, required: true, schema: {type: string}}
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/Accept'
+        - name: If-None-Match
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order representation
+          headers:
+            ETag:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+            application/xml:
+              schema:
+                type: string
+        '304':
+          description: Not Modified
+          headers:
+            ETag:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '406':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/RetryableProblem'
+    patch:
+      summary: Update order address and items with optimistic concurrency (If-Match)
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
           application/json:
-            schema: {type: object, required: [addressId, items], properties: {addressId: {type: integer, minimum: 1}, items: {type: array, minItems: 1}}}
+            schema:
+              $ref: '#/components/schemas/ReplaceOrder'
       responses:
-        '200': {description: Updated order}
-        '404': {$ref: '#/components/responses/Problem'}
-        '412': {$ref: '#/components/responses/Problem'}
-        '422': {$ref: '#/components/responses/Problem'}
-        '428': {$ref: '#/components/responses/Problem'}
-        '429': {$ref: '#/components/responses/Problem'}
+        '200':
+          description: Updated order representation
+          headers:
+            ETag:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+            application/xml:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '406':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/RetryableProblem'
+    put:
+      summary: Replace order address and items with optimistic concurrency (If-Match)
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplaceOrder'
+      responses:
+        '200':
+          description: Updated order representation
+          headers:
+            ETag:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+            application/xml:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '406':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/RetryableProblem'
     delete:
-      summary: Delete order
+      summary: Delete an order
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
       responses:
-        '204': {description: Deleted}
-        '404': {$ref: '#/components/responses/Problem'}
-        '429': {$ref: '#/components/responses/Problem'}
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '406':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/RetryableProblem'
   /orders/{orderId}/cancellation:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
     post:
       summary: Cancel an order
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/Accept'
       responses:
-        '200': {description: Cancelled order}
-        '404': {$ref: '#/components/responses/Problem'}
-        '409': {$ref: '#/components/responses/Problem'}
-        '429': {$ref: '#/components/responses/Problem'}
+        '200':
+          description: Cancelled order representation
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+            application/xml:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '406':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/RetryableProblem'
 components:
+  parameters:
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+    Accept:
+      name: Accept
+      in: header
+      required: false
+      schema:
+        type: string
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
   schemas:
-    Problem:
+    OrderItem:
       type: object
-      required: [type, title, status, detail]
+      additionalProperties: false
+      required: [itemId, quantity, unitPrice]
       properties:
-        type: {type: string, format: uri-reference}
-        title: {type: string}
-        status: {type: integer}
-        detail: {type: string}
-        errors:
-          type: array
-          items: {type: object, required: [field, message], properties: {field: {type: string}, message: {type: string}}}
+        itemId:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+          description: Item quantity (qty >= 1)
+        unitPrice:
+          type: string
+          pattern: '^\d+(\.\d{1,2})?$'
     CreateOrder:
       type: object
+      additionalProperties: false
       required: [userId, addressId, items, cardToken]
       properties:
-        userId: {type: integer, minimum: 1}
-        addressId: {type: integer, minimum: 1}
-        cardToken: {type: string, minLength: 1}
+        userId:
+          type: integer
+          minimum: 1
+        addressId:
+          type: integer
+          minimum: 1
+        cardToken:
+          type: string
+          minLength: 1
         items:
           type: array
           minItems: 1
           items:
-            type: object
-            required: [itemId, quantity, unitPrice]
-            properties: {itemId: {type: integer, minimum: 1}, quantity: {type: integer, minimum: 1, description: qty}, unitPrice: {type: string, pattern: '^\\d+(\\.\\d{1,2})?$'}}
+            $ref: '#/components/schemas/OrderItem'
+    ReplaceOrder:
+      type: object
+      additionalProperties: false
+      required: [addressId, items]
+      properties:
+        addressId:
+          type: integer
+          minimum: 1
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItem'
     Order:
       type: object
-      properties: {orderId: {type: string}, userId: {type: integer}, addressId: {type: integer}, items: {type: array}, totalAmount: {type: string}, status: {type: string}}
+      required: [orderId, userId, addressId, items, totalAmount, status]
+      properties:
+        orderId:
+          type: string
+        userId:
+          type: integer
+        addressId:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        totalAmount:
+          type: string
+        status:
+          type: string
+          enum: [confirmed, cancelled]
+    OrderList:
+      type: object
+      required: [orders, page, pageSize, total]
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+    Problem:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+              message:
+                type: string
   responses:
     Problem:
-      description: Problem Details error
+      description: RFC 7807 Problem Details error response
+      headers:
+        Cache-Control:
+          schema:
+            type: string
       content:
         application/problem+json:
-          schema: {$ref: '#/components/schemas/Problem'}
+          schema:
+            $ref: '#/components/schemas/Problem'
+    RetryableProblem:
+      description: RFC 7807 Problem Details error response with Retry-After header
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+        Cache-Control:
+          schema:
+            type: string
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

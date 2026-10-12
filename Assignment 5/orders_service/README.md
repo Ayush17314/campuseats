@@ -1,4 +1,4 @@
-# CampusEats Orders Service — Assignment 5
+# CampusEats Orders Service — Assignment 5 & Assignment 6
 
 ## TeamID 03
 
@@ -16,9 +16,7 @@
 python -m pip install -r requirements.txt
 ```
 
-In one PowerShell window, start the Tutorial 4 Payments service. If it is not
-available locally, the included development stand-in lets you exercise the
-real HTTP boundary:
+In one PowerShell window, start the Payments service stand-in:
 
 ```powershell
 python payments_stub.py
@@ -31,15 +29,13 @@ $env:PAYMENTS_BASE_URL = "http://127.0.0.1:5001"
 python app.py
 ```
 
-`PAYMENTS_BASE_URL` is required and must point to Payments. The client sends
-`POST /charges` with `orderId`, `amountMinorUnits`, `cardToken`, and the
-incoming `Idempotency-Key` header.
+`PAYMENTS_BASE_URL` is required and must point to Payments. The client sends `POST /charges` with `orderId`, `amountMinorUnits`, `cardToken`, and the incoming `Idempotency-Key` header.
 
 ## Verify
 
 ```powershell
-npx.cmd --yes @redocly/cli lint openapi.yaml
+python -m openapi_spec_validator openapi.yaml
 pytest -q
 ```
 
-Run the commands in [curl-transcript.txt](curl-transcript.txt) against a running Payments service to capture the required `curl -v` evidence. Assignment 5 requests require `Authorization: Bearer demo-token` and update requests require the current `ETag` in `If-Match`.
+Run the commands in [`transcript.txt`](transcript.txt) against the running Orders and Payments services to reproduce the full `curl -i` transcript covering the happy path, all RFC 7807 Problem Details failure paths, XML/JSON content negotiation, and Assignment 5 idempotency/caching checks.

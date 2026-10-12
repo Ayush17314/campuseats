@@ -1,63 +1,223 @@
-CampusEats Assignment 6 — curl transcript (run against Orders at localhost:5000; Payments at localhost:5001)
+CampusEats Assignment 5 & 6 — curl transcript (Orders at http://localhost:5000; Payments at http://localhost:5001)
 
-# Happy path
-curl -i -X POST http://localhost:5000/orders -H 'Authorization: Bearer demo-token' -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'Idempotency-Key: a6-good-001' --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}]}'
+# D1. Happy path — 201 Created, Location header, and JSON body
+curl -i -X POST http://localhost:5000/orders -H "Authorization: Bearer demo-token" -H "Accept: application/json" -H "Content-Type: application/json" -H "Idempotency-Key: a6-good-001" --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}]}'
+
 HTTP/1.1 201 CREATED
 Content-Type: application/json; charset=utf-8
 Location: /orders/ORD-000001
-{"orderId":"ORD-000001","userId":7,"addressId":11,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}],"totalAmount":"251.00","status":"confirmed"}
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 99
+X-Content-Type-Options: nosniff
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Access-Control-Allow-Origin: *
 
-# Empty cart — 422 (Problem Details)
-curl -i -X POST http://localhost:5000/orders -H 'Authorization: Bearer demo-token' -H 'Content-Type: application/json' -H 'Idempotency-Key: empty' --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[]}'
+{"addressId":11,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}],"orderId":"ORD-000001","status":"confirmed","totalAmount":"251.00","userId":7}
+
+
+# D2.1 Empty cart — 422 Problem Details (empty-cart)
+curl -i -X POST http://localhost:5000/orders -H "Authorization: Bearer demo-token" -H "Content-Type: application/json" -H "Idempotency-Key: a6-empty" --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[]}'
+
 HTTP/1.1 422 UNPROCESSABLE ENTITY
 Content-Type: application/problem+json; charset=utf-8
-{"type":"https://campuseats.example/problems/empty-cart","title":"Validation Failed","status":422,"detail":"Request fields are invalid.","errors":[{"field":"items","message":"Cart must contain at least one item."}]}
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 98
+X-Content-Type-Options: nosniff
 
-# qty/quantity <= 0 — 422; multiple bad fields are collected
-curl -i -X POST http://localhost:5000/orders -H 'Authorization: Bearer demo-token' -H 'Content-Type: application/json' -H 'Idempotency-Key: bad-fields' --data '{"userId":0,"addressId":0,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":0,"unitPrice":"125.50"}]}'
+{"detail":"Request fields are invalid.","errors":[{"field":"items","message":"Cart must contain at least one item."}],"status":422,"title":"Validation Failed","type":"https://campuseats.example/problems/empty-cart"}
+
+
+# D2.2 qty <= 0 and multiple invalid fields collected in one 422 response (validation-error)
+curl -i -X POST http://localhost:5000/orders -H "Authorization: Bearer demo-token" -H "Content-Type: application/json" -H "Idempotency-Key: a6-bad-fields" --data '{"userId":0,"addressId":0,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":0,"unitPrice":"125.50"}]}'
+
 HTTP/1.1 422 UNPROCESSABLE ENTITY
 Content-Type: application/problem+json; charset=utf-8
-{"type":"https://campuseats.example/problems/validation-error","title":"Validation Failed","status":422,"detail":"Request fields are invalid.","errors":[{"field":"userId","message":"Must be a positive integer."},{"field":"addressId","message":"Must be a positive integer."},{"field":"items[0].quantity","message":"Must be an integer greater than or equal to 1."}]}
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 97
+X-Content-Type-Options: nosniff
 
-# Payment decline — 422
-curl -i -X POST http://localhost:5000/orders -H 'Authorization: Bearer demo-token' -H 'Content-Type: application/json' -H 'Idempotency-Key: declined' --data '{"userId":7,"addressId":11,"cardToken":"tok_declined","items":[{"itemId":3,"quantity":1,"unitPrice":"1.00"}]}'
+{"detail":"Request fields are invalid.","errors":[{"field":"userId","message":"Must be a positive integer."},{"field":"addressId","message":"Must be a positive integer."},{"field":"items[0].quantity","message":"Must be an integer greater than or equal to 1."}],"status":422,"title":"Validation Failed","type":"https://campuseats.example/problems/validation-error"}
+
+
+# D2.3 Item unavailable — 422 Problem Details (item-unavailable)
+curl -i -X POST http://localhost:5000/orders -H "Authorization: Bearer demo-token" -H "Content-Type: application/json" -H "Idempotency-Key: a6-item-unavail" --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[{"itemId":999,"quantity":1,"unitPrice":"50.00"}]}'
+
 HTTP/1.1 422 UNPROCESSABLE ENTITY
 Content-Type: application/problem+json; charset=utf-8
-{"type":"https://campuseats.example/problems/payment-declined","title":"Payment Declined","status":422,"detail":"Payment could not be approved."}
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 96
+X-Content-Type-Options: nosniff
 
-# Unknown id — 404
-curl -i http://localhost:5000/orders/ORD-999999 -H 'Authorization: Bearer demo-token'
+{"detail":"One or more requested items are currently unavailable.","status":422,"title":"Item Unavailable","type":"https://campuseats.example/problems/item-unavailable"}
+
+
+# D2.4 Payment declined — 422 Problem Details (payment-declined)
+curl -i -X POST http://localhost:5000/orders -H "Authorization: Bearer demo-token" -H "Content-Type: application/json" -H "Idempotency-Key: a6-declined" --data '{"userId":7,"addressId":11,"cardToken":"tok_declined","items":[{"itemId":3,"quantity":1,"unitPrice":"1.00"}]}'
+
+HTTP/1.1 422 UNPROCESSABLE ENTITY
+Content-Type: application/problem+json; charset=utf-8
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-Content-Type-Options: nosniff
+
+{"detail":"Payment could not be approved.","status":422,"title":"Payment Declined","type":"https://campuseats.example/problems/payment-declined"}
+
+
+# D2.5 Malformed JSON — 400 Problem Details
+curl -i -X POST http://localhost:5000/orders -H "Authorization: Bearer demo-token" -H "Content-Type: application/json" -H "Idempotency-Key: a6-malformed" --data '{bad json'
+
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/problem+json; charset=utf-8
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 94
+X-Content-Type-Options: nosniff
+
+{"detail":"Malformed JSON body.","status":400,"title":"Bad Request","type":"about:blank"}
+
+
+# D2.6 Missing Authorization — 401 Problem Details
+curl -i http://localhost:5000/orders/ORD-000001
+
+HTTP/1.1 401 UNAUTHORIZED
+Content-Type: application/problem+json; charset=utf-8
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 100
+X-Content-Type-Options: nosniff
+
+{"detail":"Authorization: Bearer token is required.","status":401,"title":"Unauthorized","type":"about:blank"}
+
+
+# D2.7 Unknown order ID — 404 Problem Details (order-not-found)
+curl -i http://localhost:5000/orders/ORD-999999 -H "Authorization: Bearer demo-token"
+
 HTTP/1.1 404 NOT FOUND
 Content-Type: application/problem+json; charset=utf-8
-{"type":"https://campuseats.example/problems/order-not-found","title":"Order Not Found","status":404,"detail":"No order exists with the requested id."}
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 93
+X-Content-Type-Options: nosniff
 
-# Illegal transition (repeat cancellation) — first call 200, second 409
-curl -i -X POST http://localhost:5000/orders/ORD-000001/cancellation -H 'Authorization: Bearer demo-token'
-HTTP/1.1 200 OK
-{"orderId":"ORD-000001","status":"cancelled"}
-curl -i -X POST http://localhost:5000/orders/ORD-000001/cancellation -H 'Authorization: Bearer demo-token'
-HTTP/1.1 409 CONFLICT
-Content-Type: application/problem+json; charset=utf-8
-{"type":"https://campuseats.example/problems/illegal-transition","title":"Illegal Transition","status":409,"detail":"A cancelled order cannot be cancelled again."}
+{"detail":"No order exists with the requested id.","status":404,"title":"Order Not Found","type":"https://campuseats.example/problems/order-not-found"}
 
-# Rate limit — configure RATE_LIMIT=1 for transcript run; first request consumes allowance
-curl -i http://localhost:5000/orders?userId=7 -H 'Authorization: Bearer demo-token'
-HTTP/1.1 429 TOO MANY REQUESTS
-Retry-After: 60
-Content-Type: application/problem+json; charset=utf-8
-{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Request limit exceeded; retry later."}
 
-# Negotiation: supported XML representation
-curl -i http://localhost:5000/orders/ORD-000001 -H 'Authorization: Bearer demo-token' -H 'Accept: application/xml'
+# D3.1 Content negotiation: supported XML representation — 200 OK (application/xml; charset=utf-8)
+curl -i http://localhost:5000/orders/ORD-000001 -H "Authorization: Bearer demo-token" -H "Accept: application/xml"
+
 HTTP/1.1 200 OK
 Content-Type: application/xml; charset=utf-8
-<?xml version='1.0' encoding='utf-8'?>
-<order><orderId>ORD-000001</orderId>...</order>
+ETag: "6c26ec7ee57f4717cf87c62d3d64f81c049711ad4ec0f14567df150775c6c421"
+Cache-Control: private, max-age=60
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 92
+X-Content-Type-Options: nosniff
 
-# Unsupported representation — 406 Problem Details
-curl -i http://localhost:5000/orders/ORD-000001 -H 'Authorization: Bearer demo-token' -H 'Accept: text/csv'
+<?xml version="1.0" encoding="utf-8"?>
+<order><orderId>ORD-000001</orderId><userId>7</userId><addressId>11</addressId><items><item><itemId>3</itemId><quantity>2</quantity><unitPrice>125.50</unitPrice></item></items><totalAmount>251.00</totalAmount><status>confirmed</status></order>
+
+
+# D3.2 Content negotiation: unsupported representation — 406 Problem Details
+curl -i http://localhost:5000/orders/ORD-000001 -H "Authorization: Bearer demo-token" -H "Accept: text/csv"
+
 HTTP/1.1 406 NOT ACCEPTABLE
 Content-Type: application/problem+json; charset=utf-8
-{"type":"about:blank","title":"Not Acceptable","status":406,"detail":"Supported representations are application/json and application/xml."}
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 92
+X-Content-Type-Options: nosniff
 
-# Timeout/unavailable Payments: bounded retries, mapped 503 with Retry-After: 30; same Idempotency-Key is safe to retry.
+{"detail":"Supported representations are application/json and application/xml.","status":406,"title":"Not Acceptable","type":"about:blank"}
+
+
+# D4.1 Assignment 5 check: Idempotent repeat returns original 201 Created and Location without double-charging
+curl -i -X POST http://localhost:5000/orders -H "Authorization: Bearer demo-token" -H "Accept: application/json" -H "Content-Type: application/json" -H "Idempotency-Key: a6-good-001" --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}]}'
+
+HTTP/1.1 201 CREATED
+Content-Type: application/json; charset=utf-8
+Location: /orders/ORD-000001
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 91
+X-Content-Type-Options: nosniff
+
+{"addressId":11,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}],"orderId":"ORD-000001","status":"confirmed","totalAmount":"251.00","userId":7}
+
+
+# D4.2 Assignment 5 check: Conditional GET with matching If-None-Match returns 304 Not Modified
+curl -i http://localhost:5000/orders/ORD-000001 -H "Authorization: Bearer demo-token" -H 'If-None-Match: "6c26ec7ee57f4717cf87c62d3d64f81c049711ad4ec0f14567df150775c6c421"'
+
+HTTP/1.1 304 NOT MODIFIED
+ETag: "6c26ec7ee57f4717cf87c62d3d64f81c049711ad4ec0f14567df150775c6c421"
+Cache-Control: private, max-age=60
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 90
+X-Content-Type-Options: nosniff
+
+
+# D4.3 Assignment 5 check: Stale If-Match on PATCH returns 412 Precondition Failed Problem Details
+curl -i -X PATCH http://localhost:5000/orders/ORD-000001 -H "Authorization: Bearer demo-token" -H 'If-Match: "stale-etag"' -H "Content-Type: application/json" --data '{"addressId":12,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}]}'
+
+HTTP/1.1 412 PRECONDITION FAILED
+Content-Type: application/problem+json; charset=utf-8
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 89
+X-Content-Type-Options: nosniff
+
+{"detail":"ETag does not match current order.","status":412,"title":"Precondition Failed","type":"about:blank"}
+
+
+# D2.8 Illegal transition (repeat cancellation) — first call 200 OK, second call 409 Conflict (illegal-transition)
+curl -i -X POST http://localhost:5000/orders/ORD-000001/cancellation -H "Authorization: Bearer demo-token"
+
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 88
+X-Content-Type-Options: nosniff
+
+{"addressId":11,"items":[{"itemId":3,"quantity":2,"unitPrice":"125.50"}],"orderId":"ORD-000001","status":"cancelled","totalAmount":"251.00","userId":7}
+
+curl -i -X POST http://localhost:5000/orders/ORD-000001/cancellation -H "Authorization: Bearer demo-token"
+
+HTTP/1.1 409 CONFLICT
+Content-Type: application/problem+json; charset=utf-8
+Cache-Control: no-store
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 87
+X-Content-Type-Options: nosniff
+
+{"detail":"A cancelled order cannot be cancelled again.","status":409,"title":"Illegal Transition","type":"https://campuseats.example/problems/illegal-transition"}
+
+
+# D2.9 Rate limit exceeded — 429 Too Many Requests with Retry-After: 60
+curl -i http://localhost:5000/orders?userId=7 -H "Authorization: Bearer demo-token"
+
+HTTP/1.1 429 TOO MANY REQUESTS
+Content-Type: application/problem+json; charset=utf-8
+Cache-Control: no-store
+Retry-After: 60
+X-RateLimit-Limit: 1
+X-RateLimit-Remaining: 0
+X-Content-Type-Options: nosniff
+
+{"detail":"Request limit exceeded; retry later.","status":429,"title":"Too Many Requests","type":"about:blank"}
+
+
+# D4.4 / D2.10 Payment timeout / unavailable after 3 bounded retries — 503 Service Unavailable with Retry-After: 30
+curl -i -X POST http://localhost:5000/orders -H "Authorization: Bearer demo-token" -H "Content-Type: application/json" -H "Idempotency-Key: a6-timeout-001" --data '{"userId":7,"addressId":11,"cardToken":"tok_demo","items":[{"itemId":3,"quantity":1,"unitPrice":"125.50"}]}'
+
+HTTP/1.1 503 SERVICE UNAVAILABLE
+Content-Type: application/problem+json; charset=utf-8
+Cache-Control: no-store
+Retry-After: 30
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 86
+X-Content-Type-Options: nosniff
+
+{"detail":"Payment service is temporarily unavailable.","status":503,"title":"Payment Unavailable","type":"https://campuseats.example/problems/payment-unavailable"}
