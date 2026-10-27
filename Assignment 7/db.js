@@ -46,9 +46,18 @@ async function query(sql, params = []) {
       const [rows] = await pool.query(sql, params);
       return [rows];
     } catch (err) {
-      if (err.code === 'ECONNREFUSED' || err.code === 'ER_BAD_DB_ERROR' || err.code === 'ENOTFOUND') {
+      const isConnError =
+        err.name === 'AggregateError' ||
+        err.code === 'ECONNREFUSED' ||
+        err.code === 'ER_BAD_DB_ERROR' ||
+        err.code === 'ENOTFOUND' ||
+        err.code === 'ETIMEDOUT' ||
+        err.code === 'EACCES' ||
+        (err.errors && Array.isArray(err.errors));
+
+      if (isConnError) {
         if (!useFallback) {
-          console.warn(`⚠️ [db.js] MySQL unavailable (${err.code}) on ${config.host}:${config.port}. Activating local in-memory fallback.`);
+          console.warn(`⚠️ [db.js] MySQL server unavailable on ${config.host}:${config.port}. Activating local in-memory fallback.`);
           useFallback = true;
         }
       } else {
