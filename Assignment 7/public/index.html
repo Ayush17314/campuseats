@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusEats — Catalogue Service (GraphQL)</title>
+  <style>
+    :root {
+      --primary: #ff5722;
+      --primary-dark: #e64a19;
+      --secondary: #263238;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border: #e0e0e0;
+      --text: #212121;
+      --text-muted: #666666;
+      --success: #2e7d32;
+      --danger: #c62828;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: var(--card-bg);
+      padding: 24px 32px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand h1 {
+      font-size: 1.75rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .badge-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #eceff1;
+      color: var(--secondary);
+    }
+
+    .badge-primary {
+      background: #fbe9e7;
+      color: var(--primary);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--secondary);
+    }
+
+    .card-title span {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--secondary);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 20px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn:active {
+      transform: scale(0.99);
+    }
+
+    .btn-secondary {
+      background: #eceff1;
+      color: var(--secondary);
+      width: auto;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+
+    .btn-secondary:hover {
+      background: #cfd8dc;
+    }
+
+    /* Dishes Table / List */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    th {
+      background-color: #fafafa;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    tr:hover {
+      background-color: #fbfbfb;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-available {
+      background: #e8f5e9;
+      color: var(--success);
+    }
+
+    .status-unavailable {
+      background: #ffebee;
+      color: var(--danger);
+    }
+
+    /* Output Console */
+    .console-card {
+      margin-top: 24px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+    }
+
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      color: #9e9e9e;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="brand">
+      <h1>🍔 CampusEats</h1>
+      <p>Catalogue Service · GraphQL API Demonstration (Assignment 7)</p>
+    </div>
+    <div class="badge-group">
+      <span class="badge badge-primary">TeamID: 03</span>
+      <span class="badge">GraphQL: /graphql</span>
+      <span class="badge">Apollo Server 4</span>
+      <span class="badge">MySQL Backend</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- Left Column: Mutation Form -->
+    <div class="card">
+      <div class="card-title">
+        <span>Mutation</span>
+        Add New Dish
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Fires <code>mutation addDish($input: AddDishInput!)</code> to insert a record live into the database.
+      </p>
+
+      <form id="addDishForm">
+        <div class="form-group">
+          <label for="name">Dish Name * (Non-Null <code>!</code>)</label>
+          <input type="text" id="name" required placeholder="e.g. Paneer Roll" value="Paneer Roll">
+        </div>
+
+        <div class="form-group">
+          <label for="price">Price (₹) * (Non-Null <code>!</code>)</label>
+          <input type="number" id="price" step="0.5" required placeholder="e.g. 90" value="90">
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category (Nullable)</label>
+          <select id="category">
+            <option value="Rolls" selected>Rolls</option>
+            <option value="Rice">Rice</option>
+            <option value="South Indian">South Indian</option>
+            <option value="Snacks">Snacks</option>
+            <option value="Beverages">Beverages</option>
+            <option value="Desserts">Desserts</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description (Nullable)</label>
+          <input type="text" id="description" placeholder="Brief details about ingredients" value="Fresh grilled paneer with special spices wrapped in paratha">
+        </div>
+
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="available" checked>
+          <label for="available" style="margin: 0; font-weight: normal;">Mark as Available for ordering</label>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">
+          ⚡ Fire addDish Mutation
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Column: Live Query Results -->
+    <div class="card">
+      <div class="card-title">
+        <span>Query: dishes</span>
+        Current Catalogue
+        <button class="btn btn-secondary" onclick="fetchDishes()">↻ Refresh</button>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table id="dishesTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Dish</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="dishesList">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading catalogue...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GraphQL Live Response Console -->
+  <div class="console-card">
+    <div class="console-header">
+      <span>GraphQL Network Exchange Console</span>
+      <span id="lastAction">Idle</span>
+    </div>
+    <pre id="consoleOutput">// Last GraphQL request & response will appear here...</pre>
+  </div>
+</div>
+
+<script>
+  const GRAPHQL_ENDPOINT = '/graphql';
+
+  // 1. Fetch all dishes via GraphQL Query
+  async function fetchDishes() {
+    const query = `
+      query GetDishes {
+        dishes {
+          id
+          name
+          price
+          available
+          category
+          description
+        }
+      }
+    `;
+
+    document.getElementById('lastAction').innerText = 'Executing query { dishes }';
+
+    try {
+      const res = await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ query })
+      });
+
+      const result = await res.json();
+      renderDishes(result.data?.dishes || []);
+      logConsole('QUERY: GetDishes', query, result);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('dishesList').innerHTML = `
+        <tr><td colspan="5" style="color: var(--danger); text-align: center;">Error fetching dishes: ${err.message}</td></tr>
+      `;
+    }
+  }
+
+  // 2. Render list into table
+  function renderDishes(dishes) {
+    const tbody = document.getElementById('dishesList');
+    if (!dishes.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No dishes in catalogue.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = dishes.map(d => `
+      <tr>
+        <td><strong>#${d.id}</strong></td>
+        <td>
+          <strong>${escapeHtml(d.name)}</strong>
+          ${d.description ? `<div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(d.description)}</div>` : ''}
+        </td>
+        <td>${escapeHtml(d.category || 'General')}</td>
+        <td>₹${Number(d.price).toFixed(2)}</td>
+        <td>
+          <span class="status-pill ${d.available ? 'status-available' : 'status-unavailable'}">
+            ${d.available ? 'Available' : 'Out of Stock'}
+          </span>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // 3. Fire addDish Mutation on form submission
+  document.getElementById('addDishForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('name').value.trim();
+    const price = parseFloat(document.getElementById('price').value);
+    const category = document.getElementById('category').value;
+    const description = document.getElementById('description').value.trim();
+    const available = document.getElementById('available').checked;
+
+    const mutation = `
+      mutation AddDish($input: AddDishInput!) {
+        addDish(input: $input) {
+          id
+          name
+          price
+          available
+          category
+          description
+        }
+      }
+    `;
+
+    const variables = {
+      input: {
+        name,
+        price,
+        category,
+        description,
+        available
+      }
+    };
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Executing Mutation...';
+    document.getElementById('lastAction').innerText = 'Executing mutation addDish(...)';
+
+    try {
+      const res = await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ query: mutation, variables })
+      });
+
+      const result = await res.json();
+      logConsole('MUTATION: addDish', { mutation, variables }, result);
+
+      if (result.errors) {
+        alert('GraphQL Error: ' + result.errors.map(err => err.message).join(', '));
+      } else {
+        // Refresh the list immediately to show the new record live!
+        await fetchDishes();
+        // Reset name for next input
+        document.getElementById('name').value = '';
+      }
+    } catch (err) {
+      alert('Network/Server Error: ' + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = '⚡ Fire addDish Mutation';
+    }
+  });
+
+  function logConsole(title, requestPayload, responsePayload) {
+    const out = document.getElementById('consoleOutput');
+    out.innerText = `[${new Date().toLocaleTimeString()}] ${title}\n` +
+      `>>> REQUEST:\n${typeof requestPayload === 'string' ? requestPayload.trim() : JSON.stringify(requestPayload, null, 2)}\n\n` +
+      `<<< RESPONSE:\n${JSON.stringify(responsePayload, null, 2)}`;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, 
+      tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+  }
+
+  // Initial load
+  fetchDishes();
+</script>
+
+</body>
+</html>

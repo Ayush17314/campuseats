@@ -1,0 +1,43 @@
+# CampusEats Catalogue Service — GraphQL Schema
+# Entity: Dish / Menu Item
+
+type Dish {
+  id: ID!
+  name: String!
+  price: Float!
+  available: Boolean!
+  category: String
+  description: String
+}
+
+input AddDishInput {
+  name: String!
+  price: Float!
+  available: Boolean
+  category: String
+  description: String
+}
+
+input UpdateDishInput {
+  name: String
+  price: Float
+  available: Boolean
+  category: String
+  description: String
+}
+
+type Query {
+  # List all dishes, with optional category/availability filters
+  dishes(category: String, available: Boolean): [Dish!]!
+  
+  # Fetch a single dish by its unique ID
+  dish(id: ID!): Dish
+}
+
+type Mutation {
+  # Add a new dish to the catalogue
+  addDish(input: AddDishInput!): Dish!
+
+  # Update an existing dish's availability, price, or details
+  updateDish(id: ID!, input: UpdateDishInput!): Dish
+}
