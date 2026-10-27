@@ -1,18 +1,18 @@
 # CampusEats — Catalogue Service in GraphQL (Assignment 7)
+# Team Submission:** TeamID 03  
 
 **Course:** CS543 Web Services  
-**Assignment:** Assignment 7 of 12 — Build one CampusEats service in GraphQL  
+**Assignment:** Assignment 7   
 **Instructor:** Dr. Pramit Mazumdar, IIIT Vadodara  
-**Team Submission:** TeamID 03  
 
 ## Team Members
 
 | Name | Roll Number | Assignment Responsibility |
 | :--- | :--- | :--- |
-| **Ayush Kumar Dubey** | 20251651030 | Apollo Server & Express Setup (`server.js`) |
+| **Ayush Kumar Dubey** | 20251651030 | Apollo Server & Express Setup (`schema.graphql`, `schema.sql `) |
 | **Abhinav Jain** | 20251651003 | Database Connection & mysql2 Pool (`db.js`) |
-| **Anuj Gupta** | 20251651025 | Catalogue Service Schema & SQL (`schema.graphql`, `schema.sql`) |
-| **Bharath Kumar MP** | 20251651031 | Query & Mutation Resolvers |
+| **Anuj Gupta** | 20251651025 | Catalogue Service Schema & SQL (`HTML/CSS- Frontend`) |
+| **Bharath Kumar MP** | 20251651031 | Query & Mutation Resolvers (` server.js `)|
 | **Kaushik Nanda Upadhaya** | 20251651050 | Demonstration Web Frontend (`public/index.html`) & Evidence |
 
 ---
@@ -20,7 +20,7 @@
 ## One-Line Run Instruction
 
 ```bash
-npm install && npm start
+npm install express && npm start
 ```
 
 * **Interactive Web Demonstration UI:** [http://localhost:4000/](http://localhost:4000/)
@@ -30,9 +30,9 @@ npm install && npm start
 
 ## Demonstration Video & Screenshots
 
-* **Google Drive Demonstration Video:** `[PASTE_YOUR_GOOGLE_DRIVE_VIDEO_LINK_HERE]` *(Ensure permissions are set to "Anyone with the link can view")*
-* **Screenshot 1 (Before Mutation — Initial Query State):** Located in [`screenshots/before_mutation.png`](screenshots/before_mutation.png)
-* **Screenshot 2 (After Mutation — Live Mutation & Instant Refresh):** Located in [`screenshots/after_mutation.png`](screenshots/after_mutation.png)
+* **Google Drive Demonstration Video:** `https://drive.google.com/drive/folders/1zaFwqUmAzhQJ82glMnFP7RDZWmgDILNz?usp=sharing` 
+* **Screenshot 1 (Before Mutation — Initial Query State):** Located in [`Before mutation.png`](Before mutation.png)
+* **Screenshot 2 (After Mutation — Live Mutation & Instant Refresh):** Located in [`After mutation.png`](After mutation.png)
 
 ---
 
