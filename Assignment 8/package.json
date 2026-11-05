@@ -1,0 +1,21 @@
+{
+  "name": "campuseats-catalogue",
+  "version": "1.0.0",
+  "description": "CS543 Assignment 8: CampusEats Catalogue Service as a REST API with Node & Express",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "campuseats",
+    "rest-api",
+    "express",
+    "node"
+  ],
+  "author": "CampusEats Team 03",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CampusEats Catalogue</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-top">
+        <h1>CampusEats Catalogue</h1>
+        <span class="team-tag">CS543 · Assignment 8 · Team 03</span>
+      </div>
+      <p class="sub">The menu &mdash; served by a REST API (Node + Express)</p>
+    </header>
+
+    <!-- 1. The Menu List (GET /items) -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Live Menu</h2>
+        <span id="counter" style="color: #64748b; font-size: 0.9rem;">0 items</span>
+      </div>
+      <div id="list">Loading&hellip;</div>
+    </div>
+
+    <!-- 2. Form to Add a Dish (POST /items) -->
+    <form id="addForm" novalidate>
+      <h3>Add a dish (POST /items)</h3>
+      <div class="form-row">
+        <input id="name" placeholder="Dish name (required)" style="flex: 2; min-width: 160px;">
+        <input id="price" type="number" step="any" placeholder="Price in ₹ (required)" style="flex: 1; min-width: 120px;">
+        <label class="checkbox-label">
+          <input type="checkbox" id="available" checked> Available
+        </label>
+        <button type="submit" class="btn-accent" id="submitBtn">Add dish</button>
+      </div>
+      <div id="alertBox" class="alert"></div>
+    </form>
+
+    <!-- 3. Fetch Single Dish by ID (GET /items/:id) -->
+    <div class="panel lookup-section">
+      <div class="panel-header">
+        <h3>Fetch Dish by ID (GET /items/:id)</h3>
+      </div>
+      <div class="form-row" style="margin-bottom: 0;">
+        <input id="lookupId" type="number" min="1" placeholder="Enter dish ID (e.g. 1 or 99)" style="width: 220px;">
+        <button type="button" id="lookupBtn">Fetch dish</button>
+      </div>
+      <div id="lookupResult" class="result-box">Enter an ID above and click Fetch to test GET /items/:id (200 OK / 404 Not Found).</div>
+    </div>
+  </div>
+
+  <script>
+    const alertBox = document.getElementById('alertBox');
+    const counter = document.getElementById('counter');
+
+    function showAlert(msg, isError = false) {
+      alertBox.textContent = msg;
+      alertBox.className = `alert ${isError ? 'error' : 'success'}`;
+      alertBox.style.display = 'block';
+      setTimeout(() => {
+        alertBox.style.display = 'none';
+      }, 4000);
+    }
+
+    // 1. READ: GET /items, then draw the list
+    async function load() {
+      try {
+        const res = await fetch('/items');
+        const items = await res.json();
+        counter.textContent = `${items.length} items`;
+        
+        if (!items || items.length === 0) {
+          document.getElementById('list').innerHTML = '<p style="color: #64748b;">No dishes available in the catalogue.</p>';
+          return;
+        }
+
+        document.getElementById('list').innerHTML = items.map(i => {
+          const isAvail = i.available !== false;
+          const statusClass = isAvail ? 'in-stock' : 'out-of-stock';
+          const statusText = isAvail ? 'Available' : 'Out of Stock';
+          const dishClass = isAvail ? 'dish' : 'dish unavailable';
+
+          return `
+            <div class="${dishClass}">
+              <div class="dish-info">
+                <span class="id-badge">#${i.id}</span>
+                <span class="name">${i.name}</span>
+              </div>
+              <div class="dish-meta">
+                <span class="price">&#8377;${i.price}</span>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        document.getElementById('list').innerHTML = '<p style="color: #ef4444;">Failed to connect to REST API.</p>';
+      }
+    }
+
+    // 2. WRITE: the form POSTs a new dish, then refreshes the list
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const price = document.getElementById('price').value;
+      const available = document.getElementById('available').checked;
+
+      try {
+        const res = await fetch('/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, price, available })
+        });
+
+        const data = await res.json();
+
+        if (res.status === 201) {
+          showAlert(`✓ Added "${data.name}" (ID #${data.id}) at ₹${data.price} — HTTP 201 Created`, false);
+          e.target.reset();
+          document.getElementById('available').checked = true;
+          load();
+        } else {
+          showAlert(`✗ Error (HTTP ${res.status}): ${data.error || 'Failed to create item'}`, true);
+        }
+      } catch (err) {
+        showAlert('✗ Network error while communicating with server', true);
+      }
+    });
+
+    // 3. FETCH ONE: GET /items/:id
+    document.getElementById('lookupBtn').addEventListener('click', async () => {
+      const id = document.getElementById('lookupId').value.trim();
+      const resultBox = document.getElementById('lookupResult');
+
+      if (!id) {
+        resultBox.textContent = 'Please enter a numeric ID.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/items/${id}`);
+        const data = await res.json();
+
+        if (res.status === 200) {
+          resultBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">HTTP 200 OK:</span>\n${JSON.stringify(data, null, 2)}`;
+        } else if (res.status === 404) {
+          resultBox.innerHTML = `<span style="color: #991b1b; font-weight: bold;">HTTP 404 Not Found:</span>\n${JSON.stringify(data, null, 2)}`;
+        } else {
+          resultBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">HTTP ${res.status}:</span>\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (err) {
+        resultBox.textContent = `Fetch error: ${err.message}`;
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>
